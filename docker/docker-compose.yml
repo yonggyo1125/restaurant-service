@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+    oracle-xe:
+      image: gvenzl/oracle-xe:18
+      ports:
+        - "1521:1521"
+      environment:
+        ORACLE_PASSWORD: oracle
+      volumes:
+        - "oracle-volume:/opt/oracle/oradata"
