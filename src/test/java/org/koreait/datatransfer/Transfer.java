@@ -3,25 +3,27 @@ package org.koreait.datatransfer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import org.junit.jupiter.api.Test;
+import org.koreait.restaurant.entities.Restaurant;
+import org.koreait.restaurant.repositories.RestaurantRepository;
 import org.locationtech.proj4j.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 
 @SpringBootTest
-@ActiveProfiles("test")
 public class Transfer {
+
+    @Autowired
+    private RestaurantRepository repository;
 
     @Test
     void process() {
         CsvMapper mapper = new CsvMapper();
 
-        try (BufferedReader br = new BufferedReader(new FileReader("C:/data/data.csv"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader("D:/data.csv"))) {
             String line;
             while((line = br.readLine()) != null) {
                 try {
@@ -31,9 +33,16 @@ public class Transfer {
 
 
                     double[] location = transformTMToWGS84(Double.parseDouble(item.get(26)), Double.parseDouble(item.get(27)));
-                    System.out.println(item);
-                    System.out.println(Arrays.toString(location));
-                    System.out.println("-------------------------------------------------");
+                    Restaurant rItem = Restaurant.builder()
+                            .seq(Long.parseLong(item.get(0)))
+                            .name(item.get(21))
+                            .category(item.get(25))
+                            .address(item.get(19) + " " + item.get(20))
+                            .latitude(location[1])
+                            .longitude(location[0])
+                            .build();
+                    System.out.println(rItem);
+                    repository.saveAndFlush(rItem);
 
                 } catch (Exception e) {}
             }
@@ -50,7 +59,7 @@ public class Transfer {
         CoordinateReferenceSystem crsWGS84 = crsFactory.createFromName("EPSG:4326");
 
         // TM 중부원점 좌표계 (EPSG:2097)
-        CoordinateReferenceSystem crsTM = crsFactory.createFromParameters("EPSG:2097", "+proj=tmerc +lat_0=38 +lon_0=127.5 +k=1 +x_0=200000 +y_0=500000 +ellps=GRS80 +units=m +no_defs");
+        CoordinateReferenceSystem crsTM = crsFactory.createFromParameters("EPSG:2097", "+proj=tmerc +lat_0=38 +lon_0=127 +k=1 +x_0=200000 +y_0=500000 +ellps=bessel +units=m +no_defs +towgs84=-115.80,474.99,674.11,1.16,-2.31,-1.63,6.43");
 
         // CoordinateTransformFactory 생성
         CoordinateTransformFactory ctFactory = new CoordinateTransformFactory();
