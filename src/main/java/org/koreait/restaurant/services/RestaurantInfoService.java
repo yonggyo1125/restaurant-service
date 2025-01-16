@@ -55,6 +55,11 @@ public class RestaurantInfoService {
             builder.and(restaurant.category.in(category));
         }
 
+        List<Long> seqs = search.getSeq();
+        if (seqs != null && !seqs.isEmpty()) {
+            builder.and(restaurant.seq.in(seqs));
+        }
+
         String sort = search.getSort();
         Sort s = Sort.by(asc("name"));
         if (StringUtils.hasText(sort)) {

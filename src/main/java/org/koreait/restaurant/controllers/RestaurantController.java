@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.koreait.restaurant.entities.Restaurant;
 import org.koreait.restaurant.exceptions.RestaurantNotFoundException;
 import org.koreait.restaurant.services.RestaurantInfoService;
+import org.koreait.restaurant.services.RestaurantSearchService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +16,7 @@ import java.util.List;
 public class RestaurantController {
 
     private final RestaurantInfoService infoService;
+    private final RestaurantSearchService searchService;
 
     @GetMapping("/info/{seq}")
     public Restaurant info(@PathVariable("seq") Long seq) {
@@ -29,6 +31,23 @@ public class RestaurantController {
     @GetMapping("/category")
     public List<String> categories() {
         return infoService.getCategories();
+    }
+
+    /**
+     * 좌표로 근처에 있는 식당 조회
+     *
+     * @return
+     */
+    @GetMapping("/search")
+    public List<Restaurant> search(@ModelAttribute NeighborSearch search) {
+        List<Long> seq = searchService.search(search);
+        if (seq == null || seq.isEmpty()) {
+            return List.of();
+        }
+
+        RestaurantSearch rSearch = new RestaurantSearch();
+        rSearch.setSeq(seq);
+        return infoService.getList(rSearch);
     }
 
     @ExceptionHandler(RestaurantNotFoundException.class)
