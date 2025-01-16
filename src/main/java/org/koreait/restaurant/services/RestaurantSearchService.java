@@ -12,10 +12,10 @@ import java.util.List;
 
 @Service
 public class RestaurantSearchService {
-    @Value("${python.run.path}")
+    @Value("${python.path}")
     private String runPath;
 
-    @Value("${python.script.path}")
+    @Value("${python.script}")
     private String scriptPath;
 
     @Autowired
