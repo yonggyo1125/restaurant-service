@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class NeighborSearch {
-    private long lat;
-    private long lon;
+    private double lat;
+    private double lon;
     private int limit;
 }
