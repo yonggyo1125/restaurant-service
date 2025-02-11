@@ -45,7 +45,7 @@ public class RestaurantController {
             return List.of();
         }
 
-        RestaurantSearch rSearch = new RestaurantSearch();
+        NeighborSearch rSearch = new NeighborSearch();
         rSearch.setSeq(seq);
         return infoService.getList(rSearch);
     }
