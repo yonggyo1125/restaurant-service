@@ -63,7 +63,7 @@ public class RestaurantInfoService {
         }
 
         if (StringUtils.hasText(name)) {
-            builder.and(restaurant.name.contains(name.trim()));
+            builder.and(restaurant.name.contains(name));
         }
 
 
