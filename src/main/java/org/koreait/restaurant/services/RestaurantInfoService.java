@@ -2,13 +2,19 @@ package org.koreait.restaurant.services;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.koreait.global.paging.ListData;
+import org.koreait.global.paging.Pagination;
 import org.koreait.restaurant.controllers.RestaurantSearch;
 import org.koreait.restaurant.entities.QRestaurant;
 import org.koreait.restaurant.entities.Restaurant;
 import org.koreait.restaurant.exceptions.RestaurantNotFoundException;
 import org.koreait.restaurant.repositories.RestaurantRepository;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -23,6 +29,7 @@ import static org.springframework.data.domain.Sort.Order.desc;
 @RequiredArgsConstructor
 public class RestaurantInfoService {
     private final RestaurantRepository restaurantRepository;
+    private final HttpServletRequest request;
     private final JPAQueryFactory queryFactory;
 
     public Restaurant get(Long seq) {
@@ -35,11 +42,16 @@ public class RestaurantInfoService {
      * @param search
      * @return
      */
-    public List<Restaurant> getList(RestaurantSearch search)  {
+    public ListData<Restaurant> getList(RestaurantSearch search)  {
         QRestaurant restaurant = QRestaurant.restaurant;
 
+        int page = Math.max(search.getPage(), 1);
+        int limit = search.getLimit();
+        limit = limit < 1 ? 50 : limit;
         String sido = search.getSido();
         String sigugun = search.getSigugun();
+        String name = search.getName();
+
 
         BooleanBuilder builder = new BooleanBuilder();
         if (StringUtils.hasText(sido)) {
@@ -49,6 +61,11 @@ public class RestaurantInfoService {
                 builder.and(restaurant.address.contains(sigugun));
             }
         }
+
+        if (StringUtils.hasText(name)) {
+            builder.and(restaurant.name.contains(name.trim()));
+        }
+
 
         List<String> category = search.getCategory();
         if (category != null && !category.isEmpty()) {
@@ -71,8 +88,13 @@ public class RestaurantInfoService {
             else if (field.equals("address")) s = direction.equals("DESC") ? Sort.by(desc("address")) : Sort.by(asc("address"));
         }
 
+        Pageable pageable = PageRequest.of(page - 1, limit, s);
+        Page<Restaurant> data = restaurantRepository.findAll(builder, pageable);
+        List<Restaurant> items = data.getContent();
+        Pagination pagination = new Pagination(page, (int)data.getTotalElements(), 5, limit, request);
 
-        return (List<Restaurant>)restaurantRepository.findAll(builder, s);
+        return new ListData<>(items, pagination);
+
     }
 
     public List<String> getCategories() {
